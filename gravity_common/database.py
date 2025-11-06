@@ -56,14 +56,11 @@ class DatabaseConfig:
         self.pool_recycle = pool_recycle
         
         # Create async engine
+        # Use NullPool for async engines to avoid connection pool issues
         self.engine = create_async_engine(
             self.database_url,
             echo=self.echo,
             poolclass=NullPool,
-            pool_size=self.pool_size,
-            max_overflow=self.max_overflow,
-            pool_pre_ping=self.pool_pre_ping,
-            pool_recycle=self.pool_recycle,
         )
         
         # Create session maker
