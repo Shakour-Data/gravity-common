@@ -59,7 +59,7 @@ class DatabaseConfig:
         self.engine = create_async_engine(
             self.database_url,
             echo=self.echo,
-            poolclass=QueuePool,
+            poolclass=NullPool,
             pool_size=self.pool_size,
             max_overflow=self.max_overflow,
             pool_pre_ping=self.pool_pre_ping,
