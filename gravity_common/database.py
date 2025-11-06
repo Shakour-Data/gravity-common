@@ -121,7 +121,8 @@ async def check_database_connection(db_config: DatabaseConfig) -> bool:
     """
     try:
         async with db_config.engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            from sqlalchemy import text
+            await conn.execute(text("SELECT 1"))
         return True
     except Exception:
         return False
