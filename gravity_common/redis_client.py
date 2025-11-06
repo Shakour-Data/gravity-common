@@ -37,6 +37,14 @@ class RedisClient:
         self.decode_responses = decode_responses
         self._client: Optional[Redis] = None
     
+    async def _ensure_connected(self) -> Redis:
+        """Ensure Redis is connected and return client."""
+        if not self._client:
+            await self.connect()
+        if self._client is None:
+            raise RuntimeError("Redis client not connected")
+        return self._client
+    
     async def connect(self) -> None:
         """Establish Redis connection."""
         if not self._client:
@@ -62,9 +70,8 @@ class RedisClient:
         Returns:
             Cached value or None
         """
-        if not self._client:
-            await self.connect()
-        return await self._client.get(key)
+        client = await self._ensure_connected()
+        return await client.get(key)
     
     async def set(
         self,
@@ -83,13 +90,12 @@ class RedisClient:
         Returns:
             True if successful
         """
-        if not self._client:
-            await self.connect()
+        client = await self._ensure_connected()
         
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
         
-        return await self._client.set(key, value, ex=expire)
+        return await client.set(key, value, ex=expire)
     
     async def delete(self, *keys: str) -> int:
         """
@@ -101,9 +107,8 @@ class RedisClient:
         Returns:
             Number of keys deleted
         """
-        if not self._client:
-            await self.connect()
-        return await self._client.delete(*keys)
+        client = await self._ensure_connected()
+        return await client.delete(*keys)
     
     async def exists(self, key: str) -> bool:
         """
@@ -115,9 +120,8 @@ class RedisClient:
         Returns:
             True if exists, False otherwise
         """
-        if not self._client:
-            await self.connect()
-        return await self._client.exists(key) > 0
+        client = await self._ensure_connected()
+        return await client.exists(key) > 0
     
     async def incr(self, key: str, amount: int = 1) -> int:
         """
@@ -130,9 +134,8 @@ class RedisClient:
         Returns:
             New value after increment
         """
-        if not self._client:
-            await self.connect()
-        return await self._client.incrby(key, amount)
+        client = await self._ensure_connected()
+        return await client.incrby(key, amount)
     
     async def expire(self, key: str, seconds: int) -> bool:
         """
@@ -145,9 +148,8 @@ class RedisClient:
         Returns:
             True if successful
         """
-        if not self._client:
-            await self.connect()
-        return await self._client.expire(key, seconds)
+        client = await self._ensure_connected()
+        return await client.expire(key, seconds)
     
     async def get_json(self, key: str) -> Optional[dict]:
         """
@@ -194,9 +196,8 @@ class RedisClient:
             True if healthy, False otherwise
         """
         try:
-            if not self._client:
-                await self.connect()
-            await self._client.ping()
+            client = await self._ensure_connected()
+            await client.ping()
             return True
         except Exception:
             return False
